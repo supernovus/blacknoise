@@ -37,10 +37,9 @@ and onto CPAN.
  * UNIVERSAL::require
  * version
  * Test::XML
-
-All of which are easily obtainable from CPAN.
-I recommend cpanm as a client, you can install it using:
-curl -L http://cpanmin.us | perl - --sudo App::cpanminus
+ * DateTime::Format::Perl6
+   Used to be bundled, now it's in its own repository.
+   See https://github.com/supernovus/datetime-format-perl6
 
 == What's next? ==
 
