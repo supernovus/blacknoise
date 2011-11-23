@@ -1,42 +1,33 @@
-BlackNoise » GreyeNoise, without the TAL.
-===========================================
+BlackNoise » Like GreyNoise, but with Garden instead of TAL
+=============================================================
 
 == What is it? ==
 
 An implementation of the WhiteNoise static website
-generation system, but in Perl 5 instead of Perl 6.
+generation system, but in Perl 5 instead of Perl 6,
+and with Garden templates instead of TAL templates.
 
 The first Perl 5 implementation was called GreyNoise,
 and like the original WhiteNoise, it used TAL for templates.
 However, Template::TAL was manging the Unicode characters
-in templates, so I've ditched its ass.
+in templates, so I wrote BlackNoise which originally had it's own
+template system using parsed Perl templates (EVIL!)
 
-See GreyNoise's repo for the history behind this.
+Since then, I designed Garden, to be a next-generation template engine,
+and have moved BlackNoise to using Garden instead.
 
-== What is DateTime::Parse::Perl6? ==
-
-It's exactly what it sounds like, it's a parser for
-DateTime objects, that parses Perl 6 DateTime strings
-(which is an ISO8601 style string) and also formats
-them as Perl 6 would.
-
-It's derived from the DateTime::Format::RFC3339 library,
-but modified to work with Perl 6 strings specifically.
-
-Eventually, it'll probably make its way into its own repository,
-and onto CPAN.
-
-== What other dependencies are there? == 
+== What dependencies are there? == 
 
  * Perl 5.10 or higher.
  * File::Find::Rule
  * Slurp
  * DateTime
- * JSON == 2.0 or higher (JSON::XS is also highly recommended.)
+ * JSON (2.0 or higher. JSON::XS is also highly recommended.)
  * XML::LibXML
  * UNIVERSAL::require
  * version
  * Test::XML
+ * Garden (https://github.com/supernovus/garden-perl5/)
  * DateTime::Format::Perl6
    Used to be bundled, now it's in its own repository.
    See https://github.com/supernovus/datetime-format-perl6

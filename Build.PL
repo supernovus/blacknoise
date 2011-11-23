@@ -21,6 +21,7 @@ Module::Build->new(
       'JSON' => '2.0',
       'version' => 0,
       'DateTime::Format::Perl6' => '1.0.0',
+      'Garden' => 0,
     },
     create_makefile_pl => 'traditional',
 )->create_build_script;
