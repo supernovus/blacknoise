@@ -18,17 +18,14 @@ See the README, I haven't ported it into the POD docs yet.
 
 package BlackNoise;
 
-our $VERSION = "0.01";
-
-### as well as the sole distribution of DateTime::Format::Perl6
-### are included in the "contrib" folder. They are requirements.
+our $VERSION = "0.5";
 
 use strict;
 use warnings;
 use v5.10;         ## I like Perl 5.10+
 use JSON 2.0;      ## must have 2.0 or higher.
 use DateTime;      ## Dates for changelogs, etc.
-use Slurp;         ## Just quick and simple.
+use Perl6::Slurp;  ## Just quick and simple.
 use XML::LibXML;   ## Used for pages and page templates.
 use Carp;          ## Useful for some functions.
 use POSIX;         ## We're using ceil().
@@ -41,6 +38,11 @@ use File::Basename;            ## Better than get-filename from WhiteNoise.
 use File::Path qw(make_path);  ## make_path is useful.
 
 use DateTime::Format::Perl6; ## Parser and Formatter for DateTime objects.
+use Garden;                  ## Our templates are now powered by Garden.
+
+#use Huri::Debug show => ['template'];
+
+use BlackNoise::Utils; ## Helpers for templates.
 
 #### Subroutines
 
@@ -79,19 +81,10 @@ sub new {
   my $config = shift;
   if (!-f $config) { die "config file '$config' not found"; }
   my $conf = decode_json(slurp($config));
-#  my $tal  = Template::TAL->new( 
-#    include_path => abs_path($conf->{templates}->{folder}),
-#    output       => 'Template::TAL::Output::XML',
-#  );
-#  if ($conf->{templates}->{plugins}) { ## Template plugins.
-#    for my $plugin (@{$conf->{templates}->{plugins}}) {
-##      say "Adding Template plugin '$plugin'";
-#      $tal->add_language($plugin);
-#    }
-#  }
+  my $garden = Garden->new(paths=>[$conf->{templates}->{folder}]);
   my $data = {
     conf   => $conf,
-#    tal   => $tal,
+    garden => $garden,
     cache  =>   { 
       cache   => {},
       page    => {},
@@ -106,7 +99,10 @@ sub new {
     stories => {},
     indexes => {},
   };
-  return bless $data, $class;
+  my $self = bless $data, $class;
+  my $utils = BlackNoise::Utils->new($self);
+  $garden->addGlobal('utils', $utils);
+  return $self;
 }
 
 ## Accessors
@@ -116,9 +112,9 @@ sub conf {
   return $self->{conf};
 }
 
-sub tal {
+sub garden {
   my $self = shift;
-  return $self->{tal};
+  return $self->{garden};
 }
 
 sub pages {
@@ -626,28 +622,18 @@ sub parse_page {
     $type = $page->{type};
   }
 
-### This stuff is no longer used, the parser needs the
-### $page structure itself, passed in the parse_template() call.
-  ## make "page/content" into the XML node(s), if this is a page.
-#  if (exists $page->{xml}) {
-    ## Because of our modifications to Template::TAL, we can do this:
-#    $metadata->{content} = $page->{xml}->cloneNode(1); # deep clone.
-#  }
-
   my $template = $self->conf->{templates}->{$type};
-  ## The Template::TAL stuff is done in new rather than here.
 
   my $sitedata = {};
   if (exists $self->conf->{site}) {
     $sitedata = $self->conf->{site};
   }
+
   my $parsedata = {
     'site' => $sitedata,
     'page' => $metadata,
-#    '-app' => $self,     # some voodoo magic here.
   };
 
-#  my $pagecontent = $self->tal->process($template, $parsedata);
   my $pagecontent = $self->parse_template($template, $parsedata, $page);
 
   ## Kept for compatibility with GreyNoise.
@@ -817,44 +803,28 @@ sub load_plugin {
   return $plugin;
 }
 
-## The new BlackNoise parser, it's certainly not as elegant
-## as TAL, I sure wish it was. Oh well. Until Perl 6 is fast enough
-## to replace Perl 5, this will have to do. Ugly damn templates.
+## We are now using Garden to render templates.
 sub parse_template {
   my ($self, $tempname, $reps, $pagedef) = @_;
-  my $tempfile = $self->conf->{templates}->{folder} . '/' . $tempname;
-  my $temptext = slurp($tempfile);
-  my $page = $reps->{'page'};
-  my $site = $reps->{'site'};
+  ##[template] * We're in parse_template
+  ## You can use global variables if you want.
+  $self->garden->addGlobal('site', $reps->{site});
+  ##[template] * Added site to global variables.
+  $self->garden->addGlobal('page', $reps->{page});
+  ##[template] * Added page to global variables.
+  my $template = $self->garden->get($tempname);
+  ##[template] * Retreived the $tempname template.
   my $content = $pagedef->{'text'};
   ## Let's handle the current pages.
   if (defined $content) {
     $content =~ s/\<json.*?\<\/json\>//gsm; ## kill <json> tags.
-    $content =~ s/\<\/?page\>//gsm;
+    $content =~ s/\<\/?page\>//gsm;         ## kill <page> tags.
   }
+  $reps->{page}->{content} = $content;
+  ##[template] * About to call render()
+  my $output = $template->render();
+  ##[template] * Returned from render().
 
-  ## A way to include other template snippets.
-  my $include = sub { 
-    my $t = shift; 
-    return $self->parse_template($t, $reps, $pagedef); 
-  };
-  ## A replacement for the GreyNoise::Templates::Date TAL plugin.
-  my $datetime = sub { 
-    my $ts  = shift;
-    my $fmt = shift;
-    my $dt  = $self->get_datetime($ts);
-    if (ref ($dt) eq 'DateTime') {
-      return $dt->strftime($fmt);
-    }
-    else {
-      return $ts; ## sorry, we couldn't handle it.
-    }
-  };
-  ## Oh, this is such a hack.
-  my $output = eval($temptext);
-  if ($@) {
-    die "$@";
-  }
   return $output;
 }
 
