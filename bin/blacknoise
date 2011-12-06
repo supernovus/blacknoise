@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 use v5.10;
-use Slurp;
+use Perl6::Slurp;
 use BlackNoise;
 use File::Basename;
 use File::Find::Rule;

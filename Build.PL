@@ -15,7 +15,7 @@ Module::Build->new(
       'Test::XML' => 0,
       'UNIVERSAL::require' => 0,
       'File::Find::Rule' => 0,
-      'Slurp' => 0,
+      'Perl6::Slurp' => 0,
       'local::lib' => 0,
       'DateTime' => 0,
       'JSON' => '2.0',

@@ -2,6 +2,6 @@
 *.bak
 MANIFEST*
 Build
-MYMETA.yml
+MYMETA.*
 _build
 blib

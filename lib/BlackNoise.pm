@@ -28,7 +28,7 @@ use warnings;
 use v5.10;         ## I like Perl 5.10+
 use JSON 2.0;      ## must have 2.0 or higher.
 use DateTime;      ## Dates for changelogs, etc.
-use Slurp;         ## Just quick and simple.
+use Perl6::Slurp;  ## Just quick and simple.
 use XML::LibXML;   ## Used for pages and page templates.
 use Carp;          ## Useful for some functions.
 use POSIX;         ## We're using ceil().
