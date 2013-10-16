@@ -17,6 +17,7 @@ See the README, I haven't ported it into the POD docs yet.
 =cut
 
 package BlackNoise;
+# ABSTRACT: Build static websites.
 
 our $VERSION = "0.01";
 
@@ -25,13 +26,15 @@ our $VERSION = "0.01";
 
 use strict;
 use warnings;
-use v5.10;         ## I like Perl 5.10+
+use v5.12;         ## Force Perl 5.12
 use JSON 2.0;      ## must have 2.0 or higher.
 use DateTime;      ## Dates for changelogs, etc.
 use Perl6::Slurp;  ## Just quick and simple.
 use XML::LibXML;   ## Used for pages and page templates.
 use Carp;          ## Useful for some functions.
 use POSIX;         ## We're using ceil().
+use utf8::all;     ## UTF8-ize everything.
+use Encode;
 
 use Cwd qw(abs_path); ## Ensure our include dir is a full path.
 
@@ -78,7 +81,7 @@ sub new {
   my $class = shift;
   my $config = shift;
   if (!-f $config) { die "config file '$config' not found"; }
-  my $conf = decode_json(slurp($config));
+  my $conf = decode_json(encode("utf8", slurp($config)));
 #  my $tal  = Template::TAL->new( 
 #    include_path => abs_path($conf->{templates}->{folder}),
 #    output       => 'Template::TAL::Output::XML',
@@ -727,7 +730,7 @@ sub index_path {
   if ($tag) {
     $dir = "/tags/$tag/";
   }
-  elsif ($page > 1) {
+  else {
     $dir = "/index/";
   }
   $self->make_output_path($dir);
